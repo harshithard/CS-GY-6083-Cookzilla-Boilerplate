@@ -13,6 +13,7 @@ class Database:
       if self.__instance is None or self.__instance.is_connected() == False:
         self.__instance = mysql.connector.connect(
                 host=os.environ['DB_HOST'],
+                port=os.environ['DB_PORT'],
                 user=os.environ['DB_USER_ID'],
                 password=os.environ['DB_USER_PASSWORD'],
                 database=os.environ['DB_NAME']

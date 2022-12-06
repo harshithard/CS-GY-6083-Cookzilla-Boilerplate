@@ -10,11 +10,21 @@ from errors.main import ExtendableError
 from errors.internalServerError import InternalServerError
 from errors.invalidToken import InvalidJwtError
 from errors.userNotFound import UserNotFound
+from fastapi.middleware.cors import CORSMiddleware
 
+origins = ["*"]
 
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 db = Database()
 
