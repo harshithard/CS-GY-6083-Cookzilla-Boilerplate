@@ -33,6 +33,9 @@ class AuthService():
     try:
       passwordBytes = user.password.encode('utf-8')
       hashedPassword = bcrypt.hashpw(passwordBytes, bcrypt.gensalt())
+      print(("INSERT into "+ db.PersonTable +" (userName, password, fName, lName, email, profile) values (%s,%s,%s,%s,%s,%s)"), [
+        user.userName, hashedPassword, user.firstName, user.lastName, user.email, user.profile
+      ])
       _ = db.query(("INSERT into "+ db.PersonTable +" (userName, password, fName, lName, email, profile) values (%s,%s,%s,%s,%s,%s)"), [
         user.userName, hashedPassword, user.firstName, user.lastName, user.email, user.profile
       ])

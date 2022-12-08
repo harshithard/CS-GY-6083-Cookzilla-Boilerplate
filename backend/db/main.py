@@ -8,11 +8,17 @@ class Database:
 
   PersonTable = "Person"
   RecipeTable = "Recipe"
+  IngredientTable = "RecipeIngredient"
+  Ingredient = "Ingredient"
+  TagTable = "RecipeTag"
+  RecipePicture = "RecipePicture"
+  StepTable = "Step"
 
   def __init__(self):
       if self.__instance is None or self.__instance.is_connected() == False:
         self.__instance = mysql.connector.connect(
                 host=os.environ['DB_HOST'],
+                port =os.environ['DB_PORT'],
                 user=os.environ['DB_USER_ID'],
                 password=os.environ['DB_USER_PASSWORD'],
                 database=os.environ['DB_NAME']
@@ -32,7 +38,7 @@ class Database:
       result = [dict(zip(fields, row)) for row in rows]
       return { "result": result, "insertId": None if operation is 0 else operation }
     except Exception as e:
-      logger.error("Error in DB Query: %s\n %s", e, traceback.format_exception(e))
+      logger.error("Error in DB Query: %s\n %s", e, traceback.format_exc(e))
       raise e
     finally:
       self.__instance.commit()

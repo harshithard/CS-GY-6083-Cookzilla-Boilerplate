@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import service.authService as authService
 import service.recipeService as recipeService
 from errors.main import ExtendableError
+from errors.InsertFailed import InsertFailed
 from errors.internalServerError import InternalServerError
 from errors.invalidToken import InvalidJwtError
 from errors.userNotFound import UserNotFound
@@ -45,7 +46,7 @@ async def loginHandler(loginData: authService.LoginForm):
 @app.middleware("http")
 async def AuthMiddleWare(request: Request, call_next):
     try:
-        if(request.url.path not in ['/signup', '/login']):
+        if(request.url.path not in ['/signup', '/login', '/docs']):
             authHeader = request.headers.get('authorization')
             if authHeader is None:
                 raise InvalidJwtError()
@@ -81,12 +82,26 @@ async def getUser(request: Request):
         raise e
 
 @app.post("/recipe")
-async def postRecipe(request: Request, recipeToAdd: recipeService.InsertRecipe):
+async def postRecipe(request: Request, recipeToAdd: recipeService.InsertRecipe,ingredientToAdd: recipeService.InsertIngredient ,tagToAdd: recipeService.InsertTag ,stepToAdd: recipeService.InsertStep):
+     
     try:
         postedBy = request.state.user['userName']
         recipeToAdd.postedBy = postedBy
         postedRecipe = RecipeService.insertRecipe(recipeToAdd)
-        return postedRecipe
+        print(postedRecipe)
+        #Add ingredients
+        if not "recipeID" in postedRecipe:
+            raise InsertFailed()
+        
+        postedIngredient = RecipeService.insertIngredient(ingredientToAdd)
+
+        #Add tags
+        postedtags = RecipeService.insertTag(tagToAdd)
+
+        #Add steps
+        postedSteps = RecipeService.insertSteps(stepToAdd)
+
+        return postedRecipe,postedIngredient,postedtags,postedSteps
     except Exception as e:
         print(e)
         if not isinstance(e, ExtendableError):
@@ -97,8 +112,7 @@ async def postRecipe(request: Request, recipeToAdd: recipeService.InsertRecipe):
 async def exceptionHandler(request: Request, exc: ExtendableError):
     return JSONResponse(
         status_code=int(exc.code),
-        content={'info': exc.info, 'code': int(exc.code), 'name': exc.name}
-    )
+        content={'info': exc.info, 'code': int(exc.code), 'name': exc.name})
 
 
 if __name__ == "__main__":
