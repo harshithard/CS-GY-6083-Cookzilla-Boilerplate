@@ -11,6 +11,7 @@ class Database:
   IngredientTable = "RecipeIngredient"
   Ingredient = "Ingredient"
   TagTable = "RecipeTag"
+  ReviewTable = "Review"
   RecipePicture = "RecipePicture"
   StepTable = "Step"
 
@@ -36,7 +37,7 @@ class Database:
         fields = [field_md[0] for field_md in cursor.description]
       cursor.close()
       result = [dict(zip(fields, row)) for row in rows]
-      return { "result": result, "insertId": None if operation is 0 else operation }
+      return { "result": result, "insertId": None if operation == 0 else operation }
     except Exception as e:
       logger.error("Error in DB Query: %s\n %s", e, traceback.format_exc(e))
       raise e

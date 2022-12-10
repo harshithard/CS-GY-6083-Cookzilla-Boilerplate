@@ -6,6 +6,8 @@ from db.main import Database
 from dotenv import load_dotenv
 import service.authService as authService
 import service.recipeService as recipeService
+import service.searchService as searchService
+import service.reviewService as reviewService
 from errors.main import ExtendableError
 from errors.InsertFailed import InsertFailed
 from errors.internalServerError import InternalServerError
@@ -21,7 +23,8 @@ db = Database()
 
 AuthService = authService.AuthService(db)
 RecipeService = recipeService.RecipeService(db)
-
+SearchService = searchService.SearchService(db)
+ReviewService = reviewService.ReviewService(db)
 
 @app.post("/signup")
 async def signupHandler(registrationData: authService.UserRegistration):
@@ -46,7 +49,7 @@ async def loginHandler(loginData: authService.LoginForm):
 @app.middleware("http")
 async def AuthMiddleWare(request: Request, call_next):
     try:
-        if(request.url.path not in ['/signup', '/login', '/docs']):
+        if(request.url.path not in ['/signup', '/login', '/docs','/search']):
             authHeader = request.headers.get('authorization')
             if authHeader is None:
                 raise InvalidJwtError()
@@ -83,7 +86,6 @@ async def getUser(request: Request):
 
 @app.post("/recipe")
 async def postRecipe(request: Request, recipeToAdd: recipeService.InsertRecipe,ingredientToAdd: recipeService.InsertIngredient ,tagToAdd: recipeService.InsertTag ,stepToAdd: recipeService.InsertStep):
-     
     try:
         postedBy = request.state.user['userName']
         recipeToAdd.postedBy = postedBy
@@ -108,6 +110,25 @@ async def postRecipe(request: Request, recipeToAdd: recipeService.InsertRecipe,i
             raise InternalServerError()
         raise e
 
+@app.get("/search")
+async def searchRecipe(request: Request,  searchText, selectedTag, selectedStars):
+    try:
+        recipes = SearchService.retrieveRecipe(searchText, selectedTag, selectedStars)
+        return recipes
+    except Exception as e:
+        print(e)
+
+
+
+@app.post("/review")
+async def postReview(request: Request , reviewToAdd: reviewService.ReviewItem):
+    userName = request.state.user['userName']
+
+    reviewToAdd.username = userName
+    reviewPosted = ReviewService.insertReview(reviewToAdd)
+
+    return reviewPosted
+
 @app.exception_handler(ExtendableError)
 async def exceptionHandler(request: Request, exc: ExtendableError):
     return JSONResponse(
@@ -116,4 +137,4 @@ async def exceptionHandler(request: Request, exc: ExtendableError):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ['PORT']))
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=int(os.environ['PORT']),reload=True)
